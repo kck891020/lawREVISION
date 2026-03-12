@@ -77,6 +77,16 @@
     margin-top: 4px;
     font-weight: 300;
   }
+  .header-text .sni-badge {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ember);
+    letter-spacing: 1.5px;
+    border-left: 2px solid var(--fire-dark);
+    padding-left: 8px;
+  }
   .api-badge {
     margin-left: auto;
     background: rgba(255,69,0,0.15);
@@ -439,6 +449,7 @@
     <div class="header-text">
       <h1><span>소방법령</span> 개정 추출 시스템</h1>
       <p>국가법령정보센터 Open API 연동 · 개정조문 자동 추출 · Excel/웹 내보내기</p>
+      <span class="sni-badge">SNI 통합운영센터</span>
     </div>
     <div class="api-badge">🔑 API: kck891020</div>
   </div>
@@ -456,6 +467,9 @@
     </button>
     <button class="tab-btn" onclick="switchTab('compare')" id="tab-compare">
       ⚖️ 개정 비교
+    </button>
+    <button class="tab-btn" onclick="switchTab('admin')" id="tab-admin">
+      📘 행정안전규칙
     </button>
     <button class="tab-btn" onclick="switchTab('embed')" id="tab-embed">
       🌐 웹 이식
@@ -494,6 +508,14 @@
           <button class="preset-btn" onclick="setSearch('다중이용업소')">
             다중이용업소법
             <span class="preset-label">다중이용업소 안전관리</span>
+          </button>
+          <button class="preset-btn" onclick="setSearch('화재안전기술기준')">
+            화재안전기술기준
+            <span class="preset-label">NFTC · 소방청 고시</span>
+          </button>
+          <button class="preset-btn" onclick="setSearch('화재안전성능기준')">
+            화재안전성능기준
+            <span class="preset-label">NFPC · 소방청 고시</span>
           </button>
         </div>
       </div>
@@ -608,7 +630,130 @@
     </div>
   </div>
 
-  <!-- ======================== TAB 4: 웹 이식 ======================== -->
+  <!-- ======================== TAB 4: 행정안전규칙 ======================== -->
+  <div class="panel" id="panel-admin">
+    <div class="card">
+      <div class="card-title">📘 행정안전규칙 · 화재안전기준 조회</div>
+
+      <!-- 빠른 선택 -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px; color:var(--gray); margin-bottom:8px;">⚡ 빠른 선택 — 화재안전기술기준 (NFTC)</div>
+        <div class="preset-grid">
+          <button class="preset-btn" onclick="setAdminSearch('NFTC 101','소화기구 및 자동소화장치')">
+            NFTC 101
+            <span class="preset-label">소화기구 및 자동소화장치</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFTC 102','옥내소화전설비')">
+            NFTC 102
+            <span class="preset-label">옥내소화전설비</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFTC 103','스프링클러설비')">
+            NFTC 103
+            <span class="preset-label">스프링클러설비</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFTC 203','자동화재탐지설비')">
+            NFTC 203
+            <span class="preset-label">자동화재탐지설비</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFTC 301','피난기구')">
+            NFTC 301
+            <span class="preset-label">피난기구</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFTC 303','유도등')">
+            NFTC 303
+            <span class="preset-label">유도등 및 유도표지</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px; color:var(--gray); margin-bottom:8px;">⚡ 빠른 선택 — 화재안전성능기준 (NFPC)</div>
+        <div class="preset-grid">
+          <button class="preset-btn" onclick="setAdminSearch('NFPC 101','소화기구 및 자동소화장치')">
+            NFPC 101
+            <span class="preset-label">소화기구 및 자동소화장치</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFPC 102','옥내소화전설비')">
+            NFPC 102
+            <span class="preset-label">옥내소화전설비</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFPC 103','스프링클러설비')">
+            NFPC 103
+            <span class="preset-label">스프링클러설비</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFPC 203','자동화재탐지설비')">
+            NFPC 203
+            <span class="preset-label">자동화재탐지설비</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFPC 301','피난기구')">
+            NFPC 301
+            <span class="preset-label">피난기구</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFPC 303','유도등')">
+            NFPC 303
+            <span class="preset-label">유도등 및 유도표지</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="flex:2;">
+          <label>기준명 / 고시번호</label>
+          <input type="text" id="adminQuery" placeholder="예: 화재안전기술기준, NFTC 102, 화재안전성능기준...">
+        </div>
+        <div class="form-group">
+          <label>구분</label>
+          <select id="adminType">
+            <option value="전체">전체</option>
+            <option value="화재안전기술기준">화재안전기술기준 (NFTC)</option>
+            <option value="화재안전성능기준">화재안전성능기준 (NFPC)</option>
+            <option value="행정규칙">행정규칙 (고시·훈령·예규)</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:0 0 auto; align-self:flex-end;">
+          <button class="btn btn-primary" onclick="searchAdmin()" id="adminBtn">
+            🔍 검색
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar" id="adminStatus">
+      <div class="status-dot" id="adminDot"></div>
+      <span id="adminStatusText">기준명을 선택하거나 직접 입력 후 검색하세요.</span>
+    </div>
+
+    <!-- 안내 카드 -->
+    <div class="card" style="border-color:#2a3a5c; background:#1a2035; margin-bottom:16px;">
+      <div class="card-title" style="color:#5b9bd5;">ℹ️ 화재안전기준 안내</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:13px; color:#aaa; line-height:1.8;">
+        <div>
+          <div style="color:#5b9bd5; font-weight:700; margin-bottom:6px;">🔵 화재안전기술기준 (NFTC)</div>
+          소방청장이 고시하는 <strong style="color:#ccc;">기술적 세부기준</strong><br>
+          설치방법·규격·수치 등 구체적 기술사항 규정<br>
+          소방시설 설치·관리법 제2조 근거
+        </div>
+        <div>
+          <div style="color:#2ecc71; font-weight:700; margin-bottom:6px;">🟢 화재안전성능기준 (NFPC)</div>
+          소방청장이 고시하는 <strong style="color:#ccc;">성능 위주 기준</strong><br>
+          달성해야 할 성능목표 중심으로 규정<br>
+          소방시설 설치·관리법 제2조 근거
+        </div>
+      </div>
+      <div style="margin-top:12px; padding-top:12px; border-top:1px solid #2a3a5c; font-size:12px; color:#666;">
+        ※ NFTC는 기존 NFSC(화재안전기준)를 대체하여 2022년부터 적용 · NFPC는 성능위주설계 대상에 적용
+      </div>
+    </div>
+
+    <div id="adminResults">
+      <div class="empty-state">
+        <div class="icon">📘</div>
+        <p>위 빠른 선택 버튼 또는 검색으로 기준을 조회하세요.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== TAB 5: 웹 이식 ======================== -->
   <div class="panel" id="panel-embed">
     <div class="card">
       <div class="card-title">🌐 웹페이지 이식 가이드</div>
@@ -1029,7 +1174,123 @@ function toggleDiff(i) {
   row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
 }
 
-// ===== EXPORT 함수들 =====
+// ===== 행정안전규칙 탭 =====
+function setAdminSearch(code, name) {
+  document.getElementById('adminQuery').value = code + ' ' + name;
+  searchAdmin();
+}
+
+async function searchAdmin() {
+  const query = document.getElementById('adminQuery').value.trim();
+  const type  = document.getElementById('adminType').value;
+  if (!query) { alert('기준명을 입력해주세요.'); return; }
+
+  const btn = document.getElementById('adminBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> 검색 중...';
+  setStatus('admin', 'loading', `"${query}" 행정규칙 검색 중... (법제처 API 호출)`);
+
+  try {
+    // 행정규칙(고시·훈령·예규) 대상으로 검색
+    const xml = await callAPI('lawSearch.do', { target: 'admrul', query, display: 30 });
+    const items = xml.querySelectorAll('admrul');
+
+    if (items.length === 0) throw new Error('결과 없음');
+
+    const data = Array.from(items).map(item => ({
+      id:           item.querySelector('행정규칙ID')?.textContent || '',
+      name:         item.querySelector('행정규칙명')?.textContent || '',
+      ruleType:     item.querySelector('행정규칙구분명')?.textContent || '',
+      dept:         item.querySelector('소관부처명')?.textContent || '',
+      promulgDate:  item.querySelector('공포일자')?.textContent || '',
+      enfDate:      item.querySelector('시행일자')?.textContent || '',
+      hosiNum:      item.querySelector('공포번호')?.textContent || '',
+    }));
+
+    cachedData = data;
+    setStatus('admin', 'success', `총 ${data.length}건 검색 완료`);
+    renderAdminResults(data);
+  } catch (e) {
+    setStatus('admin', 'error', '⚠️ API 연결 불가. 샘플 데이터 표시 중.');
+    renderMockAdminResults(query);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔍 검색';
+  }
+}
+
+function renderMockAdminResults(query) {
+  const isNFTC = query.toUpperCase().includes('NFTC') || query.includes('기술기준');
+  const isNFPC = query.toUpperCase().includes('NFPC') || query.includes('성능기준');
+
+  const mock = isNFTC ? [
+    { name: '화재안전기술기준(NFTC 102) - 옥내소화전설비', ruleType: '고시', dept: '소방청', promulgDate: '20230101', enfDate: '20230101', hosiNum: '2023-1', id: '' },
+    { name: '화재안전기술기준(NFTC 103) - 스프링클러설비', ruleType: '고시', dept: '소방청', promulgDate: '20230101', enfDate: '20230101', hosiNum: '2023-2', id: '' },
+    { name: '화재안전기술기준(NFTC 203) - 자동화재탐지설비 및 시각경보장치', ruleType: '고시', dept: '소방청', promulgDate: '20230101', enfDate: '20230101', hosiNum: '2023-8', id: '' },
+  ] : isNFPC ? [
+    { name: '화재안전성능기준(NFPC 102) - 옥내소화전설비', ruleType: '고시', dept: '소방청', promulgDate: '20230101', enfDate: '20230101', hosiNum: '2023-101', id: '' },
+    { name: '화재안전성능기준(NFPC 103) - 스프링클러설비', ruleType: '고시', dept: '소방청', promulgDate: '20230101', enfDate: '20230101', hosiNum: '2023-102', id: '' },
+    { name: '화재안전성능기준(NFPC 203) - 자동화재탐지설비 및 시각경보장치', ruleType: '고시', dept: '소방청', promulgDate: '20230101', enfDate: '20230101', hosiNum: '2023-108', id: '' },
+  ] : [
+    { name: '화재안전기술기준(NFTC 101) - 소화기구 및 자동소화장치', ruleType: '고시', dept: '소방청', promulgDate: '20230801', enfDate: '20230801', hosiNum: '2023-37', id: '' },
+    { name: '화재안전성능기준(NFPC 101) - 소화기구 및 자동소화장치', ruleType: '고시', dept: '소방청', promulgDate: '20230801', enfDate: '20230801', hosiNum: '2023-38', id: '' },
+    { name: '소방시설등의 성능위주설계 방법 및 기준', ruleType: '고시', dept: '소방청', promulgDate: '20231010', enfDate: '20231010', hosiNum: '2023-55', id: '' },
+  ];
+
+  cachedData = mock;
+  renderAdminResults(mock);
+}
+
+function renderAdminResults(data) {
+  const typeColor = (t) => {
+    if (t.includes('고시')) return 'tag-new';
+    if (t.includes('훈령')) return 'tag-amend';
+    if (t.includes('예규')) return 'tag-current';
+    return 'tag-current';
+  };
+
+  const html = `
+    <div class="action-bar">
+      <button class="btn btn-excel" onclick="exportExcel()">📊 Excel 저장</button>
+      <button class="btn btn-secondary" onclick="exportCSV()">📄 CSV 저장</button>
+      <button class="btn btn-secondary" onclick="exportJSON()">📦 JSON 저장</button>
+      <span class="result-count">총 <span>${data.length}</span>건</span>
+    </div>
+    <div class="result-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>행정규칙명</th>
+            <th>구분</th>
+            <th>고시번호</th>
+            <th>소관부처</th>
+            <th>공포일자</th>
+            <th>시행일자</th>
+            <th>작업</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(d => `
+            <tr>
+              <td>${d.name}</td>
+              <td><span class="tag ${typeColor(d.ruleType)}">${d.ruleType || '고시'}</span></td>
+              <td style="font-family:'JetBrains Mono',monospace; font-size:12px;">${d.hosiNum || '-'}</td>
+              <td>${d.dept || '-'}</td>
+              <td>${formatDate(d.promulgDate)}</td>
+              <td>${formatDate(d.enfDate)}</td>
+              <td>
+                <button class="btn btn-secondary" style="padding:5px 10px; font-size:12px;"
+                  onclick="goToArticle('${d.name.replace(/'/g,"\\'")}')">조문보기</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  document.getElementById('adminResults').innerHTML = html;
+}
+
+
 function exportExcel() {
   if (!cachedData || cachedData.length === 0) {
     alert('먼저 검색 또는 조회를 실행해주세요.'); return;
