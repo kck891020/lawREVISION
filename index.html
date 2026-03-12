@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>소방법령 개정 추출 시스템</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --fire: #FF4500;
+    --fire-light: #FF6B35;
+    --fire-dark: #CC3700;
+    --ember: #FF8C00;
+    --smoke: #2C2C2C;
+    --ash: #1A1A1A;
+    --white: #F8F8F8;
+    --gray: #888;
+    --light-gray: #333;
+    --success: #2ECC71;
+    --warning: #F39C12;
+    --new: #3498DB;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--ash);
+    color: var(--white);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--ash) 0%, #2a1200 50%, var(--ash) 100%);
+    border-bottom: 2px solid var(--fire-dark);
+    padding: 24px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -10%;
+    width: 120%;
+    height: 200%;
+    background: radial-gradient(ellipse at 50% 50%, rgba(255,69,0,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .flame-icon {
+    font-size: 48px;
+    animation: flicker 1.5s infinite alternate;
+  }
+  @keyframes flicker {
+    0% { transform: scale(1) rotate(-2deg); filter: brightness(1); }
+    100% { transform: scale(1.08) rotate(2deg); filter: brightness(1.3); }
+  }
+  .header-text h1 {
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--white);
+    letter-spacing: -0.5px;
+  }
+  .header-text h1 span { color: var(--fire); }
+  .header-text p {
+    font-size: 13px;
+    color: var(--gray);
+    margin-top: 4px;
+    font-weight: 300;
+  }
+  .header-text .sni-badge {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ember);
+    letter-spacing: 1.5px;
+    border-left: 2px solid var(--fire-dark);
+    padding-left: 8px;
+  }
+  .api-badge {
+    margin-left: auto;
+    background: rgba(255,69,0,0.15);
+    border: 1px solid var(--fire-dark);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 12px;
+    color: var(--fire-light);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* MAIN LAYOUT */
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px 40px; }
+
+  /* TAB NAV */
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+    background: var(--smoke);
+    border-radius: 12px;
+    padding: 6px;
+    border: 1px solid #333;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    color: var(--gray);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .tab-btn.active {
+    background: var(--fire);
+    color: white;
+    font-weight: 700;
+  }
+  .tab-btn:hover:not(.active) {
+    background: rgba(255,69,0,0.15);
+    color: var(--fire-light);
+  }
+
+  /* PANEL */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* CARD */
+  .card {
+    background: var(--smoke);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--fire-light);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* FORM ELEMENTS */
+  .form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .form-group { flex: 1; min-width: 200px; }
+  .form-group label {
+    display: block;
+    font-size: 12px;
+    color: var(--gray);
+    margin-bottom: 6px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+  .form-group input, .form-group select {
+    width: 100%;
+    background: var(--ash);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--white);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--fire);
+  }
+  .form-group select option { background: var(--smoke); }
+
+  /* BUTTONS */
+  .btn {
+    padding: 11px 22px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    background: var(--fire);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--fire-light); transform: translateY(-1px); }
+  .btn-secondary {
+    background: #333;
+    color: var(--white);
+    border: 1px solid #444;
+  }
+  .btn-secondary:hover { background: #444; }
+  .btn-success {
+    background: var(--success);
+    color: white;
+  }
+  .btn-success:hover { background: #27ae60; }
+  .btn-excel {
+    background: #1D6F42;
+    color: white;
+  }
+  .btn-excel:hover { background: #155734; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* STATUS BAR */
+  .status-bar {
+    background: var(--ash);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--gray);
+    margin-bottom: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gray);
+    flex-shrink: 0;
+  }
+  .status-dot.loading {
+    background: var(--ember);
+    animation: pulse 1s infinite;
+  }
+  .status-dot.success { background: var(--success); }
+  .status-dot.error { background: #e74c3c; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* RESULTS TABLE */
+  .result-wrap {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid #333;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead tr {
+    background: linear-gradient(135deg, #2a1200, #1a1a1a);
+    border-bottom: 2px solid var(--fire-dark);
+  }
+  thead th {
+    padding: 12px 14px;
+    text-align: left;
+    color: var(--fire-light);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid #2a2a2a;
+    transition: background 0.15s;
+  }
+  tbody tr:hover { background: rgba(255,69,0,0.05); }
+  tbody td {
+    padding: 11px 14px;
+    color: #ccc;
+    line-height: 1.6;
+  }
+  tbody td:first-child { color: var(--white); font-weight: 500; }
+
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 4px;
+  }
+  .tag-new { background: rgba(52,152,219,0.2); color: var(--new); border: 1px solid rgba(52,152,219,0.4); }
+  .tag-amend { background: rgba(243,156,18,0.2); color: var(--warning); border: 1px solid rgba(243,156,18,0.4); }
+  .tag-delete { background: rgba(231,76,60,0.2); color: #e74c3c; border: 1px solid rgba(231,76,60,0.4); }
+  .tag-current { background: rgba(46,204,113,0.2); color: var(--success); border: 1px solid rgba(46,204,113,0.4); }
+
+  /* ACTION BAR */
+  .action-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+  .result-count {
+    margin-left: auto;
+    font-size: 13px;
+    color: var(--gray);
+  }
+  .result-count span { color: var(--fire-light); font-weight: 700; }
+
+  /* PRESET LAWS */
+  .preset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .preset-btn {
+    background: var(--ash);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #bbb;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+  }
+  .preset-btn:hover {
+    border-color: var(--fire);
+    color: var(--fire-light);
+    background: rgba(255,69,0,0.08);
+  }
+  .preset-btn .preset-label {
+    display: block;
+    font-size: 11px;
+    color: var(--gray);
+    margin-top: 3px;
+  }
+
+  /* DIFF VIEW */
+  .diff-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .diff-box {
+    background: var(--ash);
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #333;
+  }
+  .diff-box h4 {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #333;
+  }
+  .diff-box.old h4 { color: #e74c3c; }
+  .diff-box.new h4 { color: var(--success); }
+  .diff-text { font-size: 13px; line-height: 1.8; color: #ccc; white-space: pre-wrap; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gray);
+  }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 24px;
+    color: #555;
+    font-size: 12px;
+    border-top: 1px solid #222;
+    margin-top: 40px;
+  }
+  footer a { color: var(--fire-dark); text-decoration: none; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .container { padding: 20px 16px; }
+    header { padding: 20px 16px; }
+    .diff-container { grid-template-columns: 1fr; }
+    .form-row { flex-direction: column; }
+  }
+
+  .loading-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .highlight { background: rgba(255,69,0,0.15); border-radius: 3px; padding: 1px 3px; }
+
+  /* WEB EMBED SECTION */
+  .code-block {
+    background: var(--ash);
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #aaa;
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.7;
+  }
+  .copy-btn {
+    float: right;
+    margin-top: -4px;
+    padding: 4px 10px;
+    font-size: 11px;
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 5px;
+    color: #ccc;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+  .copy-btn:hover { background: #444; color: white; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="flame-icon">🔥</div>
+    <div class="header-text">
+      <h1><span>소방법령</span> 개정 추출 시스템</h1>
+      <p>국가법령정보센터 Open API 연동 · 개정조문 자동 추출 · Excel/웹 내보내기</p>
+      <span class="sni-badge">SNI 통합운영센터</span>
+    </div>
+    <div class="api-badge">🔑 API: kck891020</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- TAB NAV -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('search')" id="tab-search">
+      🔍 법령 검색
+    </button>
+    <button class="tab-btn" onclick="switchTab('article')" id="tab-article">
+      📄 조문 조회
+    </button>
+    <button class="tab-btn" onclick="switchTab('compare')" id="tab-compare">
+      ⚖️ 개정 비교
+    </button>
+    <button class="tab-btn" onclick="switchTab('admin')" id="tab-admin">
+      📘 행정안전규칙
+    </button>
+    <button class="tab-btn" onclick="switchTab('embed')" id="tab-embed">
+      🌐 웹 이식
+    </button>
+  </div>
+
+  <!-- ======================== TAB 1: 법령 검색 ======================== -->
+  <div class="panel active" id="panel-search">
+    <div class="card">
+      <div class="card-title">🔎 소방 법령 검색</div>
+
+      <!-- 프리셋 -->
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px; color:var(--gray); margin-bottom:8px;">⚡ 빠른 선택</div>
+        <div class="preset-grid">
+          <button class="preset-btn" onclick="setSearch('소방기본법')">
+            소방기본법
+            <span class="preset-label">기본·조직·권한</span>
+          </button>
+          <button class="preset-btn" onclick="setSearch('화재의 예방 및 안전관리')">
+            화재예방·안전관리법
+            <span class="preset-label">화재예방·화재안전조사</span>
+          </button>
+          <button class="preset-btn" onclick="setSearch('소방시설 설치 및 관리')">
+            소방시설 설치·관리법
+            <span class="preset-label">소방시설·성능위주설계</span>
+          </button>
+          <button class="preset-btn" onclick="setSearch('위험물안전관리법')">
+            위험물안전관리법
+            <span class="preset-label">위험물 저장·취급</span>
+          </button>
+          <button class="preset-btn" onclick="setSearch('소방시설공사업법')">
+            소방시설공사업법
+            <span class="preset-label">공사업·감리</span>
+          </button>
+          <button class="preset-btn" onclick="setSearch('다중이용업소')">
+            다중이용업소법
+            <span class="preset-label">다중이용업소 안전관리</span>
+          </button>
+          <button class="preset-btn" onclick="setSearch('화재안전기술기준')">
+            화재안전기술기준
+            <span class="preset-label">NFTC · 소방청 고시</span>
+          </button>
+          <button class="preset-btn" onclick="setSearch('화재안전성능기준')">
+            화재안전성능기준
+            <span class="preset-label">NFPC · 소방청 고시</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="flex:2;">
+          <label>검색어</label>
+          <input type="text" id="searchQuery" placeholder="예: 소방기본법, 화재예방법..." value="소방기본법">
+        </div>
+        <div class="form-group">
+          <label>법령 종류</label>
+          <select id="lawType">
+            <option value="법령">법령 전체</option>
+            <option value="법률">법률만</option>
+            <option value="시행령">시행령만</option>
+            <option value="시행규칙">시행규칙만</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:0 0 auto; align-self:flex-end;">
+          <button class="btn btn-primary" onclick="searchLaws()" id="searchBtn">
+            🔍 검색
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar" id="searchStatus">
+      <div class="status-dot" id="searchDot"></div>
+      <span id="searchStatusText">검색어를 입력하고 검색 버튼을 클릭하세요.</span>
+    </div>
+
+    <div id="searchResults">
+      <div class="empty-state">
+        <div class="icon">📋</div>
+        <p>검색 결과가 여기에 표시됩니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== TAB 2: 조문 조회 ======================== -->
+  <div class="panel" id="panel-article">
+    <div class="card">
+      <div class="card-title">📄 조문 단위 조회 및 추출</div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2;">
+          <label>법령명 (또는 법령 일련번호)</label>
+          <input type="text" id="articleLawName" placeholder="예: 소방기본법">
+        </div>
+        <div class="form-group">
+          <label>시행일자 기준</label>
+          <input type="date" id="articleDate" value="">
+        </div>
+        <div class="form-group" style="flex:0 0 auto; align-self:flex-end;">
+          <button class="btn btn-primary" onclick="fetchArticles()" id="articleBtn">
+            📄 조문 불러오기
+          </button>
+        </div>
+      </div>
+      <div style="font-size:12px; color:var(--gray); margin-top:8px;">
+        💡 검색 탭에서 법령을 클릭하면 자동으로 입력됩니다.
+      </div>
+    </div>
+
+    <div class="status-bar" id="articleStatus">
+      <div class="status-dot" id="articleDot"></div>
+      <span id="articleStatusText">법령명을 입력하고 조문을 불러오세요.</span>
+    </div>
+
+    <div id="articleResults">
+      <div class="empty-state">
+        <div class="icon">📑</div>
+        <p>조문 목록이 여기에 표시됩니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== TAB 3: 개정 비교 ======================== -->
+  <div class="panel" id="panel-compare">
+    <div class="card">
+      <div class="card-title">⚖️ 개정 전·후 비교 (신구조문)</div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2;">
+          <label>법령명</label>
+          <input type="text" id="compareLawName" placeholder="예: 소방기본법">
+        </div>
+        <div class="form-group">
+          <label>구법 시행일 (개정 전)</label>
+          <input type="date" id="oldDate">
+        </div>
+        <div class="form-group">
+          <label>신법 시행일 (개정 후)</label>
+          <input type="date" id="newDate">
+        </div>
+        <div class="form-group" style="flex:0 0 auto; align-self:flex-end;">
+          <button class="btn btn-primary" onclick="compareLaws()" id="compareBtn">
+            ⚖️ 비교 실행
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar" id="compareStatus">
+      <div class="status-dot" id="compareDot"></div>
+      <span id="compareStatusText">비교할 법령명과 날짜를 입력하세요.</span>
+    </div>
+
+    <div id="compareResults">
+      <div class="empty-state">
+        <div class="icon">⚖️</div>
+        <p>개정 전·후 비교 결과가 여기에 표시됩니다.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== TAB 4: 행정안전규칙 ======================== -->
+  <div class="panel" id="panel-admin">
+    <div class="card">
+      <div class="card-title">📘 행정안전규칙 · 화재안전기준 조회</div>
+
+      <!-- 빠른 선택 -->
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px; color:var(--gray); margin-bottom:8px;">⚡ 빠른 선택 — 화재안전기술기준 (NFTC)</div>
+        <div class="preset-grid">
+          <button class="preset-btn" onclick="setAdminSearch('NFTC 101','소화기구 및 자동소화장치')">
+            NFTC 101
+            <span class="preset-label">소화기구 및 자동소화장치</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFTC 102','옥내소화전설비')">
+            NFTC 102
+            <span class="preset-label">옥내소화전설비</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFTC 103','스프링클러설비')">
+            NFTC 103
+            <span class="preset-label">스프링클러설비</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFTC 203','자동화재탐지설비')">
+            NFTC 203
+            <span class="preset-label">자동화재탐지설비</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFTC 301','피난기구')">
+            NFTC 301
+            <span class="preset-label">피난기구</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFTC 303','유도등')">
+            NFTC 303
+            <span class="preset-label">유도등 및 유도표지</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px; color:var(--gray); margin-bottom:8px;">⚡ 빠른 선택 — 화재안전성능기준 (NFPC)</div>
+        <div class="preset-grid">
+          <button class="preset-btn" onclick="setAdminSearch('NFPC 101','소화기구 및 자동소화장치')">
+            NFPC 101
+            <span class="preset-label">소화기구 및 자동소화장치</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFPC 102','옥내소화전설비')">
+            NFPC 102
+            <span class="preset-label">옥내소화전설비</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFPC 103','스프링클러설비')">
+            NFPC 103
+            <span class="preset-label">스프링클러설비</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFPC 203','자동화재탐지설비')">
+            NFPC 203
+            <span class="preset-label">자동화재탐지설비</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFPC 301','피난기구')">
+            NFPC 301
+            <span class="preset-label">피난기구</span>
+          </button>
+          <button class="preset-btn" onclick="setAdminSearch('NFPC 303','유도등')">
+            NFPC 303
+            <span class="preset-label">유도등 및 유도표지</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="flex:2;">
+          <label>기준명 / 고시번호</label>
+          <input type="text" id="adminQuery" placeholder="예: 화재안전기술기준, NFTC 102, 화재안전성능기준...">
+        </div>
+        <div class="form-group">
+          <label>구분</label>
+          <select id="adminType">
+            <option value="전체">전체</option>
+            <option value="화재안전기술기준">화재안전기술기준 (NFTC)</option>
+            <option value="화재안전성능기준">화재안전성능기준 (NFPC)</option>
+            <option value="행정규칙">행정규칙 (고시·훈령·예규)</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:0 0 auto; align-self:flex-end;">
+          <button class="btn btn-primary" onclick="searchAdmin()" id="adminBtn">
+            🔍 검색
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar" id="adminStatus">
+      <div class="status-dot" id="adminDot"></div>
+      <span id="adminStatusText">기준명을 선택하거나 직접 입력 후 검색하세요.</span>
+    </div>
+
+    <!-- 안내 카드 -->
+    <div class="card" style="border-color:#2a3a5c; background:#1a2035; margin-bottom:16px;">
+      <div class="card-title" style="color:#5b9bd5;">ℹ️ 화재안전기준 안내</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:13px; color:#aaa; line-height:1.8;">
+        <div>
+          <div style="color:#5b9bd5; font-weight:700; margin-bottom:6px;">🔵 화재안전기술기준 (NFTC)</div>
+          소방청장이 고시하는 <strong style="color:#ccc;">기술적 세부기준</strong><br>
+          설치방법·규격·수치 등 구체적 기술사항 규정<br>
+          소방시설 설치·관리법 제2조 근거
+        </div>
+        <div>
+          <div style="color:#2ecc71; font-weight:700; margin-bottom:6px;">🟢 화재안전성능기준 (NFPC)</div>
+          소방청장이 고시하는 <strong style="color:#ccc;">성능 위주 기준</strong><br>
+          달성해야 할 성능목표 중심으로 규정<br>
+          소방시설 설치·관리법 제2조 근거
+        </div>
+      </div>
+      <div style="margin-top:12px; padding-top:12px; border-top:1px solid #2a3a5c; font-size:12px; color:#666;">
+        ※ NFTC는 기존 NFSC(화재안전기준)를 대체하여 2022년부터 적용 · NFPC는 성능위주설계 대상에 적용
+      </div>
+    </div>
+
+    <div id="adminResults">
+      <div class="empty-state">
+        <div class="icon">📘</div>
+        <p>위 빠른 선택 버튼 또는 검색으로 기준을 조회하세요.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== TAB 5: 웹 이식 ======================== -->
+  <div class="panel" id="panel-embed">
+    <div class="card">
+      <div class="card-title">🌐 웹페이지 이식 가이드</div>
+      <p style="font-size:13px; color:#aaa; margin-bottom:20px; line-height:1.8;">
+        아래 코드를 그대로 복사해서 원하시는 웹페이지에 붙여넣으시면 됩니다.<br>
+        HTML 파일로 저장하거나, 워드프레스 등 CMS의 HTML 블록에 삽입하세요.
+      </p>
+
+      <div style="margin-bottom:20px;">
+        <div class="card-title" style="font-size:13px;">① 검색 위젯 삽입 코드</div>
+        <div style="position:relative;">
+          <button class="copy-btn" onclick="copyCode('embedCode1')">복사</button>
+          <div class="code-block" id="embedCode1">&lt;!-- 소방법령 검색 위젯 --&gt;
+&lt;div id="fireLawWidget"&gt;&lt;/div&gt;
+&lt;script&gt;
+  const API_KEY = "kck891020";
+  const BASE = "https://www.law.go.kr/DRF";
+
+  async function searchFireLaw(query) {
+    const url = `${BASE}/lawSearch.do?OC=${API_KEY}&target=law&type=JSON&query=${encodeURIComponent(query)}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.LawSearch?.law || [];
+  }
+
+  // 검색 후 결과를 HTML로 렌더링
+  searchFireLaw("소방기본법").then(laws =&gt; {
+    const widget = document.getElementById("fireLawWidget");
+    widget.innerHTML = laws.map(l =&gt;
+      `&lt;div class="law-item"&gt;
+        &lt;h3&gt;${l.법령명한글}&lt;/h3&gt;
+        &lt;p&gt;공포일: ${l.공포일자} | 시행일: ${l.시행일자}&lt;/p&gt;
+      &lt;/div&gt;`
+    ).join("");
+  });
+&lt;/script&gt;</div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div class="card-title" style="font-size:13px;">② 현재 추출된 데이터를 JSON으로 내보내기</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-secondary" onclick="exportJSON()">📦 JSON 내보내기</button>
+          <button class="btn btn-excel" onclick="exportExcel()">📊 Excel 내보내기</button>
+          <button class="btn btn-secondary" onclick="exportCSV()">📄 CSV 내보내기</button>
+        </div>
+        <div style="margin-top:12px; font-size:12px; color:var(--gray);">
+          추출된 데이터가 없을 경우 먼저 검색 또는 조문 조회를 실행해주세요.
+        </div>
+      </div>
+
+      <div>
+        <div class="card-title" style="font-size:13px;">③ API 직접 호출 주소 예시</div>
+        <div class="code-block">법령 검색:
+https://www.law.go.kr/DRF/lawSearch.do?OC=kck891020&target=law&type=JSON&query=소방기본법
+
+법령 본문 조회 (법령 ID 필요):
+https://www.law.go.kr/DRF/lawService.do?OC=kck891020&target=law&type=JSON&ID={법령ID}
+
+신구조문 비교:
+https://www.law.go.kr/DRF/lawService.do?OC=kck891020&target=lsNwJo&type=JSON&ID={법령ID}
+
+시행규칙 조회:
+https://www.law.go.kr/DRF/lawSearch.do?OC=kck891020&target=law&type=JSON&query=소방&lsType=RDO</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  소방법령 개정 추출 시스템 · 국가법령정보센터 Open API 연동 · API Key: kck891020<br>
+  <a href="https://open.law.go.kr" target="_blank">open.law.go.kr</a> · 데이터 출처: 법제처 국가법령정보센터
+</footer>
+
+<script>
+const API_KEY = 'kck891020';
+const PROXY = 'https://api.allorigins.win/get?url=';
+const BASE = 'https://www.law.go.kr/DRF';
+
+let cachedData = [];
+let currentTab = 'search';
+
+// ===== 탭 전환 =====
+function switchTab(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  currentTab = tab;
+}
+
+// ===== 상태바 업데이트 =====
+function setStatus(prefix, type, msg) {
+  const dot = document.getElementById(prefix + 'Dot');
+  const text = document.getElementById(prefix + 'StatusText');
+  dot.className = 'status-dot ' + type;
+  text.textContent = msg;
+}
+
+// ===== API 호출 (CORS 우회) =====
+async function callAPI(endpoint, params) {
+  const qs = Object.entries({...params, OC: API_KEY, type: 'XML'})
+    .map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+  const targetUrl = `${BASE}/${endpoint}?${qs}`;
+  const proxyUrl = PROXY + encodeURIComponent(targetUrl);
+
+  const res = await fetch(proxyUrl);
+  const json = await res.json();
+  const parser = new DOMParser();
+  return parser.parseFromString(json.contents, 'text/xml');
+}
+
+// ===== 프리셋 검색 =====
+function setSearch(query) {
+  document.getElementById('searchQuery').value = query;
+  searchLaws();
+}
+
+// ===== 법령 검색 =====
+async function searchLaws() {
+  const query = document.getElementById('searchQuery').value.trim();
+  if (!query) { alert('검색어를 입력해주세요.'); return; }
+
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> 검색 중...';
+  setStatus('search', 'loading', `"${query}" 검색 중... (법제처 API 호출)`);
+
+  try {
+    const xml = await callAPI('lawSearch.do', { target: 'law', query, display: 30 });
+    const items = xml.querySelectorAll('law');
+
+    if (items.length === 0) {
+      setStatus('search', 'error', '검색 결과가 없습니다. 다른 검색어를 시도해보세요.');
+      document.getElementById('searchResults').innerHTML = `
+        <div class="empty-state"><div class="icon">🔍</div><p>검색 결과가 없습니다.</p></div>`;
+      return;
+    }
+
+    const laws = Array.from(items).map(item => ({
+      id: item.querySelector('법령ID')?.textContent || '',
+      name: item.querySelector('법령명한글')?.textContent || '',
+      mst: item.querySelector('법령MST')?.textContent || '',
+      promulgDate: item.querySelector('공포일자')?.textContent || '',
+      enfDate: item.querySelector('시행일자')?.textContent || '',
+      dept: item.querySelector('소관부처명')?.textContent || '',
+      type: item.querySelector('법령구분명')?.textContent || '',
+    }));
+
+    cachedData = laws;
+    setStatus('search', 'success', `총 ${laws.length}건 검색 완료`);
+    renderSearchResults(laws);
+  } catch (e) {
+    setStatus('search', 'error', '오류: ' + e.message + ' (API 연결 실패 시 아래 직접 호출 주소를 이용하세요)');
+    renderMockResults();
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔍 검색';
+  }
+}
+
+function formatDate(d) {
+  if (!d || d.length < 8) return d || '-';
+  return `${d.slice(0,4)}.${d.slice(4,6)}.${d.slice(6,8)}`;
+}
+
+function renderSearchResults(laws) {
+  const html = `
+    <div class="action-bar">
+      <button class="btn btn-excel" onclick="exportExcel()">📊 Excel 저장</button>
+      <button class="btn btn-secondary" onclick="exportCSV()">📄 CSV 저장</button>
+      <button class="btn btn-secondary" onclick="exportJSON()">📦 JSON 저장</button>
+      <span class="result-count">총 <span>${laws.length}</span>건</span>
+    </div>
+    <div class="result-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>법령명</th>
+            <th>법령구분</th>
+            <th>소관부처</th>
+            <th>공포일자</th>
+            <th>시행일자</th>
+            <th>작업</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${laws.map(l => `
+            <tr>
+              <td>${l.name}</td>
+              <td><span class="tag tag-current">${l.type || '법령'}</span></td>
+              <td>${l.dept || '-'}</td>
+              <td>${formatDate(l.promulgDate)}</td>
+              <td>${formatDate(l.enfDate)}</td>
+              <td>
+                <button class="btn btn-secondary" style="padding:5px 10px; font-size:12px;"
+                  onclick="goToArticle('${l.name}')">조문보기</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  document.getElementById('searchResults').innerHTML = html;
+}
+
+// API 연결 실패 시 샘플 데이터
+function renderMockResults() {
+  const mockLaws = [
+    { name: '소방기본법', type: '법률', dept: '소방청', promulgDate: '20231220', enfDate: '20240101', id: '' },
+    { name: '소방기본법 시행령', type: '대통령령', dept: '소방청', promulgDate: '20231215', enfDate: '20240101', id: '' },
+    { name: '소방기본법 시행규칙', type: '부령', dept: '소방청', promulgDate: '20231210', enfDate: '20240101', id: '' },
+  ];
+  cachedData = mockLaws;
+  setStatus('search', 'error', '⚠️ API 직접 연결 불가 (브라우저 보안 정책). 샘플 데이터 표시 중. 실제 사용 시 서버 환경에서 실행하세요.');
+  renderSearchResults(mockLaws);
+}
+
+// ===== 조문 조회 탭으로 이동 =====
+function goToArticle(lawName) {
+  document.getElementById('articleLawName').value = lawName;
+  switchTab('article');
+  fetchArticles();
+}
+
+// ===== 조문 조회 =====
+async function fetchArticles() {
+  const lawName = document.getElementById('articleLawName').value.trim();
+  if (!lawName) { alert('법령명을 입력해주세요.'); return; }
+
+  const btn = document.getElementById('articleBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> 불러오는 중...';
+  setStatus('article', 'loading', `"${lawName}" 조문 조회 중...`);
+
+  try {
+    const xml = await callAPI('lawService.do', { target: 'law', query: lawName });
+    const articles = xml.querySelectorAll('조문단위');
+
+    if (articles.length === 0) throw new Error('조문 없음');
+
+    const data = Array.from(articles).map(a => ({
+      num: a.querySelector('조문번호')?.textContent || '',
+      title: a.querySelector('조문제목')?.textContent || '',
+      content: a.querySelector('조문내용')?.textContent?.trim().slice(0, 200) || '',
+    }));
+
+    cachedData = data;
+    setStatus('article', 'success', `총 ${data.length}개 조문 조회 완료`);
+    renderArticles(data, lawName);
+  } catch (e) {
+    setStatus('article', 'error', '⚠️ API 연결 불가. 샘플 데이터 표시 중.');
+    renderMockArticles(lawName);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '📄 조문 불러오기';
+  }
+}
+
+function renderMockArticles(lawName) {
+  const mock = [
+    { num: '1', title: '목적', content: '이 법은 화재를 예방·경계하거나 진압하고 화재, 재난·재해, 그 밖의 위급한 상황에서의 구조·구급 활동 등을 통하여 국민의 생명·신체 및 재산을 보호함으로써...' },
+    { num: '2', title: '정의', content: '이 법에서 사용하는 용어의 뜻은 다음과 같다. 1. "소방대상물"이란 건축물, 차량, 선박(「선박법」 제1조의2제1항에 따른 선박으로서...' },
+    { num: '3', title: '소방기관의 설치 등', content: '시·도의 화재 예방·경계·진압 및 조사와 화재, 재난·재해, 그 밖의 위급한 상황에서의 구조·구급 등의 업무를 수행하는 소방기관의 설치에 필요한 사항은...' },
+    { num: '4', title: '119종합상황실의 설치와 운영', content: '소방청장, 소방본부장 또는 소방서장은 화재, 재난·재해, 그 밖에 구조·구급이 필요한 상황이 발생하였을 때에 신속하게 대응하기 위하여 119종합상황실을 설치·운영하여야 한다.' },
+  ];
+  cachedData = mock;
+  renderArticles(mock, lawName);
+}
+
+function renderArticles(data, lawName) {
+  const html = `
+    <div class="action-bar">
+      <button class="btn btn-excel" onclick="exportExcel()">📊 Excel 저장</button>
+      <button class="btn btn-secondary" onclick="exportCSV()">📄 CSV 저장</button>
+      <button class="btn btn-secondary" onclick="exportJSON()">📦 JSON 저장</button>
+      <button class="btn btn-primary" onclick="goToCompare('${lawName}')">⚖️ 개정비교</button>
+      <span class="result-count">총 <span>${data.length}</span>개 조문</span>
+    </div>
+    <div class="result-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>조번호</th>
+            <th>조제목</th>
+            <th>조문 내용 (일부)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(a => `
+            <tr>
+              <td>제${a.num}조</td>
+              <td>${a.title || '-'}</td>
+              <td>${a.content || '-'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  document.getElementById('articleResults').innerHTML = html;
+}
+
+function goToCompare(lawName) {
+  document.getElementById('compareLawName').value = lawName;
+  switchTab('compare');
+}
+
+// ===== 개정 비교 =====
+async function compareLaws() {
+  const lawName = document.getElementById('compareLawName').value.trim();
+  if (!lawName) { alert('법령명을 입력해주세요.'); return; }
+
+  const btn = document.getElementById('compareBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> 비교 중...';
+  setStatus('compare', 'loading', `"${lawName}" 신구조문 비교 중...`);
+
+  try {
+    const xml = await callAPI('lawService.do', { target: 'lsNwJo', query: lawName });
+    const items = xml.querySelectorAll('신구조문');
+
+    if (items.length === 0) throw new Error('비교 데이터 없음');
+
+    const data = Array.from(items).map(item => ({
+      artNum: item.querySelector('조번호')?.textContent || '',
+      artTitle: item.querySelector('조제목')?.textContent || '',
+      oldContent: item.querySelector('현행')?.textContent?.trim() || '',
+      newContent: item.querySelector('개정')?.textContent?.trim() || '',
+    }));
+
+    setStatus('compare', 'success', `총 ${data.length}개 조문 변경사항 확인`);
+    renderCompare(data);
+    cachedData = data;
+  } catch (e) {
+    setStatus('compare', 'error', '⚠️ API 연결 불가. 샘플 비교 데이터 표시 중.');
+    renderMockCompare();
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '⚖️ 비교 실행';
+  }
+}
+
+function renderMockCompare() {
+  const mock = [
+    {
+      artNum: '13',
+      artTitle: '소방활동',
+      oldContent: '소방대장은 화재, 재난·재해, 그 밖의 위급한 상황이 발생한 현장에서 소방활동을 위하여 필요할 때에는 그 관할구역에 사는 사람 또는 그 현장에 있는 사람으로 하여금 사람을 구출하는 일 또는 불을 끄거나 불이 번지지 아니하도록 하는 일을 하게 할 수 있다.',
+      newContent: '소방대장은 화재, 재난·재해, 그 밖의 위급한 상황이 발생한 현장에서 소방활동을 위하여 필요할 때에는 그 관할구역에 사는 사람 또는 그 현장에 있는 사람으로 하여금 사람을 구출하는 일 또는 불을 끄거나 불이 번지지 아니하도록 하는 일을 하게 할 수 있다. 이 경우 소방대장은 소방활동에 종사한 자에게 소방청장이 정하는 바에 따라 수당을 지급하여야 한다.'
+    },
+    {
+      artNum: '16',
+      artTitle: '소방용수시설의 설치 및 관리',
+      oldContent: '시·도지사는 소방활동에 필요한 소화전·급수탑·저수조(貯水槽)를 설치하고 유지·관리하여야 한다.',
+      newContent: '시·도지사는 소방활동에 필요한 소화전·급수탑·저수조를 설치하고 유지·관리하여야 한다. 이 경우 소화전은 상수도와 연결하여 설치하여야 하며, 그 설치 기준은 행정안전부령으로 정한다.'
+    },
+  ];
+  cachedData = mock;
+  renderCompare(mock);
+}
+
+function renderCompare(data) {
+  const tableHtml = `
+    <div class="action-bar">
+      <button class="btn btn-excel" onclick="exportExcel()">📊 Excel 저장</button>
+      <button class="btn btn-secondary" onclick="exportCSV()">📄 CSV 저장</button>
+      <span class="result-count">변경 조문 <span>${data.length}</span>건</span>
+    </div>
+    <div class="result-wrap" style="margin-bottom:20px;">
+      <table>
+        <thead>
+          <tr>
+            <th>조번호</th>
+            <th>조제목</th>
+            <th>변경유형</th>
+            <th>상세보기</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map((d, i) => `
+            <tr>
+              <td>제${d.artNum}조</td>
+              <td>${d.artTitle || '-'}</td>
+              <td>
+                ${!d.oldContent ? '<span class="tag tag-new">신설</span>' :
+                  !d.newContent ? '<span class="tag tag-delete">삭제</span>' :
+                  '<span class="tag tag-amend">개정</span>'}
+              </td>
+              <td>
+                <button class="btn btn-secondary" style="padding:5px 10px; font-size:12px;"
+                  onclick="toggleDiff(${i})">상세 ▼</button>
+              </td>
+            </tr>
+            <tr id="diff-${i}" style="display:none;">
+              <td colspan="4" style="padding:0;">
+                <div class="diff-container" style="padding:12px;">
+                  <div class="diff-box old">
+                    <h4>🔴 개정 전 (현행)</h4>
+                    <div class="diff-text">${d.oldContent || '(신설)'}</div>
+                  </div>
+                  <div class="diff-box new">
+                    <h4>🟢 개정 후</h4>
+                    <div class="diff-text">${d.newContent || '(삭제)'}</div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  document.getElementById('compareResults').innerHTML = tableHtml;
+}
+
+function toggleDiff(i) {
+  const row = document.getElementById('diff-' + i);
+  row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+}
+
+// ===== 행정안전규칙 탭 =====
+function setAdminSearch(code, name) {
+  document.getElementById('adminQuery').value = code + ' ' + name;
+  searchAdmin();
+}
+
+async function searchAdmin() {
+  const query = document.getElementById('adminQuery').value.trim();
+  const type  = document.getElementById('adminType').value;
+  if (!query) { alert('기준명을 입력해주세요.'); return; }
+
+  const btn = document.getElementById('adminBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span> 검색 중...';
+  setStatus('admin', 'loading', `"${query}" 행정규칙 검색 중... (법제처 API 호출)`);
+
+  try {
+    // 행정규칙(고시·훈령·예규) 대상으로 검색
+    const xml = await callAPI('lawSearch.do', { target: 'admrul', query, display: 30 });
+    const items = xml.querySelectorAll('admrul');
+
+    if (items.length === 0) throw new Error('결과 없음');
+
+    const data = Array.from(items).map(item => ({
+      id:           item.querySelector('행정규칙ID')?.textContent || '',
+      name:         item.querySelector('행정규칙명')?.textContent || '',
+      ruleType:     item.querySelector('행정규칙구분명')?.textContent || '',
+      dept:         item.querySelector('소관부처명')?.textContent || '',
+      promulgDate:  item.querySelector('공포일자')?.textContent || '',
+      enfDate:      item.querySelector('시행일자')?.textContent || '',
+      hosiNum:      item.querySelector('공포번호')?.textContent || '',
+    }));
+
+    cachedData = data;
+    setStatus('admin', 'success', `총 ${data.length}건 검색 완료`);
+    renderAdminResults(data);
+  } catch (e) {
+    setStatus('admin', 'error', '⚠️ API 연결 불가. 샘플 데이터 표시 중.');
+    renderMockAdminResults(query);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔍 검색';
+  }
+}
+
+function renderMockAdminResults(query) {
+  const isNFTC = query.toUpperCase().includes('NFTC') || query.includes('기술기준');
+  const isNFPC = query.toUpperCase().includes('NFPC') || query.includes('성능기준');
+
+  const mock = isNFTC ? [
+    { name: '화재안전기술기준(NFTC 102) - 옥내소화전설비', ruleType: '고시', dept: '소방청', promulgDate: '20230101', enfDate: '20230101', hosiNum: '2023-1', id: '' },
+    { name: '화재안전기술기준(NFTC 103) - 스프링클러설비', ruleType: '고시', dept: '소방청', promulgDate: '20230101', enfDate: '20230101', hosiNum: '2023-2', id: '' },
+    { name: '화재안전기술기준(NFTC 203) - 자동화재탐지설비 및 시각경보장치', ruleType: '고시', dept: '소방청', promulgDate: '20230101', enfDate: '20230101', hosiNum: '2023-8', id: '' },
+  ] : isNFPC ? [
+    { name: '화재안전성능기준(NFPC 102) - 옥내소화전설비', ruleType: '고시', dept: '소방청', promulgDate: '20230101', enfDate: '20230101', hosiNum: '2023-101', id: '' },
+    { name: '화재안전성능기준(NFPC 103) - 스프링클러설비', ruleType: '고시', dept: '소방청', promulgDate: '20230101', enfDate: '20230101', hosiNum: '2023-102', id: '' },
+    { name: '화재안전성능기준(NFPC 203) - 자동화재탐지설비 및 시각경보장치', ruleType: '고시', dept: '소방청', promulgDate: '20230101', enfDate: '20230101', hosiNum: '2023-108', id: '' },
+  ] : [
+    { name: '화재안전기술기준(NFTC 101) - 소화기구 및 자동소화장치', ruleType: '고시', dept: '소방청', promulgDate: '20230801', enfDate: '20230801', hosiNum: '2023-37', id: '' },
+    { name: '화재안전성능기준(NFPC 101) - 소화기구 및 자동소화장치', ruleType: '고시', dept: '소방청', promulgDate: '20230801', enfDate: '20230801', hosiNum: '2023-38', id: '' },
+    { name: '소방시설등의 성능위주설계 방법 및 기준', ruleType: '고시', dept: '소방청', promulgDate: '20231010', enfDate: '20231010', hosiNum: '2023-55', id: '' },
+  ];
+
+  cachedData = mock;
+  renderAdminResults(mock);
+}
+
+function renderAdminResults(data) {
+  const typeColor = (t) => {
+    if (t.includes('고시')) return 'tag-new';
+    if (t.includes('훈령')) return 'tag-amend';
+    if (t.includes('예규')) return 'tag-current';
+    return 'tag-current';
+  };
+
+  const html = `
+    <div class="action-bar">
+      <button class="btn btn-excel" onclick="exportExcel()">📊 Excel 저장</button>
+      <button class="btn btn-secondary" onclick="exportCSV()">📄 CSV 저장</button>
+      <button class="btn btn-secondary" onclick="exportJSON()">📦 JSON 저장</button>
+      <span class="result-count">총 <span>${data.length}</span>건</span>
+    </div>
+    <div class="result-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>행정규칙명</th>
+            <th>구분</th>
+            <th>고시번호</th>
+            <th>소관부처</th>
+            <th>공포일자</th>
+            <th>시행일자</th>
+            <th>작업</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(d => `
+            <tr>
+              <td>${d.name}</td>
+              <td><span class="tag ${typeColor(d.ruleType)}">${d.ruleType || '고시'}</span></td>
+              <td style="font-family:'JetBrains Mono',monospace; font-size:12px;">${d.hosiNum || '-'}</td>
+              <td>${d.dept || '-'}</td>
+              <td>${formatDate(d.promulgDate)}</td>
+              <td>${formatDate(d.enfDate)}</td>
+              <td>
+                <button class="btn btn-secondary" style="padding:5px 10px; font-size:12px;"
+                  onclick="goToArticle('${d.name.replace(/'/g,"\\'")}')">조문보기</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  document.getElementById('adminResults').innerHTML = html;
+}
+
+
+function exportExcel() {
+  if (!cachedData || cachedData.length === 0) {
+    alert('먼저 검색 또는 조회를 실행해주세요.'); return;
+  }
+
+  const headers = Object.keys(cachedData[0]);
+  const csvContent = [
+    headers.join('\t'),
+    ...cachedData.map(row => headers.map(h => (row[h] || '').toString().replace(/\t/g, ' ')).join('\t'))
+  ].join('\n');
+
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csvContent], { type: 'application/vnd.ms-excel; charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `소방법령_${new Date().toISOString().slice(0,10)}.xls`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportCSV() {
+  if (!cachedData || cachedData.length === 0) {
+    alert('먼저 검색 또는 조회를 실행해주세요.'); return;
+  }
+  const headers = Object.keys(cachedData[0]);
+  const csvContent = [
+    headers.join(','),
+    ...cachedData.map(row => headers.map(h => `"${(row[h] || '').toString().replace(/"/g, '""')}"`).join(','))
+  ].join('\n');
+
+  const BOM = '\uFEFF';
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv; charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `소방법령_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportJSON() {
+  if (!cachedData || cachedData.length === 0) {
+    alert('먼저 검색 또는 조회를 실행해주세요.'); return;
+  }
+  const blob = new Blob([JSON.stringify(cachedData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `소방법령_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function copyCode(id) {
+  const el = document.getElementById(id);
+  const text = el.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = el.previousElementSibling;
+    btn.textContent = '✓ 복사됨';
+    setTimeout(() => btn.textContent = '복사', 1500);
+  });
+}
+
+// 오늘 날짜 기본값
+const today = new Date().toISOString().slice(0,10);
+document.getElementById('articleDate').value = today;
+document.getElementById('newDate').value = today;
+const lastYear = new Date();
+lastYear.setFullYear(lastYear.getFullYear() - 1);
+document.getElementById('oldDate').value = lastYear.toISOString().slice(0,10);
+</script>
+</body>
+</html>
